@@ -1,5 +1,5 @@
 class Quiz {
-    constructor (questions, timeLimit, timeRemaining){
+    constructor(questions, timeLimit, timeRemaining) {
         this.questions = questions;
         this.timeLimit = timeLimit;
         this.timeRemaining = timeRemaining;
@@ -7,15 +7,15 @@ class Quiz {
         this.currentQuestionIndex = 0;
     }
 
-    getQuestion(){
+    getQuestion() {
         return this.questions[this.currentQuestionIndex]
     }
-    
-     moveToNextQuestion(){
-        return this.currentQuestionIndex++;
-     }
 
-    shuffleQuestions(){
+    moveToNextQuestion() {
+        return this.currentQuestionIndex++;
+    }git checkout
+
+    shuffleQuestions() {
         for (let i = this.questions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [this.questions[i], this.questions[j]] = [this.questions[j], this.questions[i]];
@@ -24,15 +24,14 @@ class Quiz {
 
     }
 
-    checkAnswer(answer){
-        if (this.answer !== 0){
+    checkAnswer(answer) {
+        if (this.answer !== 0) {
             this.correctAnswers++;
         }
-        
     }
 
-    hasEnded(){
-        if (this.currentQuestionIndex < this.questions.length){
+    hasEnded() {
+        if (this.currentQuestionIndex < this.questions.length) {
             return false;
         }
         if (this.currentQuestionIndex == this.questions.length) {
