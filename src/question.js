@@ -1,3 +1,4 @@
+// @ts-nocheck
 class Question {
   constructor(text, choices, answer, difficulty) {
     this.text = text;

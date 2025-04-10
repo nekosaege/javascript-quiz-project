@@ -1,11 +1,9 @@
 // @ts-nocheck
 document.addEventListener("DOMContentLoaded", () => {
-  /************  HTML ELEMENTS  ************/
-  // View divs
+  /************ HTML ELEMENTS ************/
   const quizView = document.querySelector("#quizView");
   const endView = document.querySelector("#endView");
 
-  // Quiz view elements
   const progressBar = document.querySelector("#progressBar");
   const questionCount = document.querySelector("#questionCount");
   const questionContainer = document.querySelector("#question");
@@ -13,199 +11,185 @@ document.addEventListener("DOMContentLoaded", () => {
   const nextButton = document.querySelector("#nextButton");
   const restartButton = document.querySelector("#restartButton");
 
-  // End view elements
   const resultContainer = document.querySelector("#result");
+  const timeRemainingContainer = document.getElementById("timeRemaining");
 
-  /************  SET VISIBILITY OF VIEWS  ************/
-
-  // Show the quiz view (div#quizView) and hide the end view (div#endView)
-  quizView.style.display = "block";
-  endView.style.display = "none";
-
-  /************  QUIZ DATA  ************/
-
-  // Array with the quiz questions
+  /************ QUIZ DATA ************/
   const questions = [
     new Question("What is 2 + 2?", ["3", "4", "5", "6"], "4", 1),
-
     new Question(
       "What is the capital of France?",
       ["Miami", "Paris", "Oslo", "Rome"],
       "Paris",
       1
     ),
-
     new Question(
       "Who created JavaScript?",
       ["Plato", "Brendan Eich", "Lea Verou", "Bill Gates"],
       "Brendan Eich",
       2
     ),
-
     new Question(
       "What is the mass–energy equivalence equation?",
       ["E = mc^2", "E = m*c^2", "E = m*c^3", "E = m*c"],
       "E = mc^2",
       3
     ),
+    new Question(
+      "Which planet is known as the Red Planet?",
+      ["Venus", "Saturn", "Mars", "Jupiter"],
+      "Mars",
+      1
+    ),
 
-    // new Question(
-    //   "Which planet is known as the Red Planet?",
-    //   ["Venus", "Saturn", "Mars", "Jupiter"],
-    //   "Mars",
-    //   1
-    // ),
+    new Question(
+      "What does HTML stand for?",
+      [
+        "Hyper Text Markup Language",
+        "Home Tool Markup Language",
+        "Hyperlinks and Text Markup Language",
+        "Hyper Technical Modern Language",
+      ],
+      "Hyper Text Markup Language",
+      1
+    ),
 
-    // new Question(
-    //   "What does HTML stand for?",
-    //   [
-    //     "Hyper Text Markup Language",
-    //     "Home Tool Markup Language",
-    //     "Hyperlinks and Text Markup Language",
-    //     "Hyper Technical Modern Language",
-    //   ],
-    //   "Hyper Text Markup Language",
-    //   1
-    // ),
+    new Question(
+      "Which data structure uses FIFO (First In First Out)?",
+      ["Stack", "Queue", "Tree", "Graph"],
+      "Queue",
+      2
+    ),
 
-    // new Question(
-    //   "Which data structure uses FIFO (First In First Out)?",
-    //   ["Stack", "Queue", "Tree", "Graph"],
-    //   "Queue",
-    //   2
-    // ),
+    new Question(
+      "Which country hosted the 2020 Summer Olympics?",
+      ["Brazil", "Japan", "China", "UK"],
+      "Japan",
+      2
+    ),
 
-    // new Question(
-    //   "Which country hosted the 2020 Summer Olympics?",
-    //   ["Brazil", "Japan", "China", "UK"],
-    //   "Japan",
-    //   2
-    // ),
+    new Question(
+      "What is the value of π (pi) approximately?",
+      ["2.14", "3.14", "4.14", "5.14"],
+      "3.14",
+      1
+    ),
 
-    // new Question(
-    //   "What is the value of π (pi) approximately?",
-    //   ["2.14", "3.14", "4.14", "5.14"],
-    //   "3.14",
-    //   1
-    // ),
-
-    // new Question(
-    //   "Who painted the Mona Lisa?",
-    //   [
-    //     "Vincent van Gogh",
-    //     "Leonardo da Vinci",
-    //     "Pablo Picasso",
-    //     "Claude Monet",
-    //   ],
-    //   "Leonardo da Vinci",
-    //   2
-    // ),
+    new Question(
+      "Who painted the Mona Lisa?",
+      [
+        "Vincent van Gogh",
+        "Leonardo da Vinci",
+        "Pablo Picasso",
+        "Claude Monet",
+      ],
+      "Leonardo da Vinci",
+      2
+    ),
   ];
-  const quizDuration = 120; // 120 seconds (2 minutes)
 
-  // Create a new Quiz instance object
+  const quizDuration = 120; // seconds
+  let timer = null;
+
   const quiz = new Quiz(questions, quizDuration, quizDuration);
-  // Shuffle the quiz questions
   quiz.shuffleQuestions();
 
-  // Convert the time remaining in seconds to minutes and seconds, and pad the numbers with zeros if needed
-  const minutes = Math.floor(quiz.timeRemaining / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
-
-  // Display the time remaining in the time remaining container
-  const timeRemainingContainer = document.getElementById("timeRemaining");
-  timeRemainingContainer.innerText = `${minutes}:${seconds}`;
-
-  // Show first question
+  /************ INITIAL VIEW ************/
+  quizView.style.display = "block";
+  endView.style.display = "none";
+  updateTimerDisplay();
   showQuestion();
+  startTimer();
 
-  /************  TIMER  ************/
+  /************ TIMER FUNCTION ************/
+  function startTimer() {
+    clearInterval(timer); // just in case
+    timer = setInterval(() => {
+      if (quiz.timeRemaining <= 0) {
+        clearInterval(timer);
+        showResults();
+        return;
+      }
+      quiz.timeRemaining--;
+      updateTimerDisplay();
+    }, 1000);
+  }
 
-  let timer;
+  function updateTimerDisplay() {
+    const minutes = String(Math.floor(quiz.timeRemaining / 60)).padStart(
+      2,
+      "0"
+    );
+    const seconds = String(quiz.timeRemaining % 60).padStart(2, "0");
+    timeRemainingContainer.innerText = `${minutes}:${seconds}`;
+  }
 
-  /************  EVENT LISTENERS  ************/
-
+  /************ EVENT LISTENERS ************/
   nextButton.addEventListener("click", nextButtonHandler);
+  restartButton.addEventListener("click", startOver);
 
-  /************  FUNCTIONS  ************/
-
-  // showQuestion() - Displays the current question and its choices
-  // nextButtonHandler() - Handles the click on the next button
-  // showResults() - Displays the end view and the quiz results
-
+  /************ DISPLAY FUNCTIONS ************/
   function showQuestion() {
-    // If the quiz has ended, show the results
     if (quiz.hasEnded()) {
       showResults();
       return;
     }
 
-    // Clear the previous question text and question choices
+    // Clear previous content
     questionContainer.innerText = "";
     choiceContainer.innerHTML = "";
 
-    // Get the current question from the quiz by calling the Quiz class method `getQuestion()`
+    // Get current question and shuffle choices
     const currentQuestion = quiz.getQuestion();
-    // Shuffle the choices of the current question by calling the method 'shuffleChoices()' on the question object
     currentQuestion.shuffleChoices();
 
-    // 1. Show the question
+    // Display question
     questionContainer.innerText = currentQuestion.text;
 
-    // 2. Update the green progress bar
-    const progress = (quiz.currentQuestionIndex / questions.length) * 100;
+    // Update progress bar
+    const progress = (quiz.currentQuestionIndex / quiz.questions.length) * 100;
     progressBar.style.width = `${progress}%`;
 
-    // 3. Update the question count text
+    // Show question count
     questionCount.innerText = `Question ${quiz.currentQuestionIndex + 1} of ${
-      questions.length
+      quiz.questions.length
     }`;
 
-    // 4. Create and display new radio input element with a label for each choice.
-    const choices = currentQuestion.choices;
-    choices.forEach((choise, i) => {
-      const newLi = document.createElement("li");
-      const newRadio = document.createElement("input");
-      const newLabel = document.createElement("label");
+    // Render choices
+    currentQuestion.choices.forEach((choice, i) => {
+      const li = document.createElement("li");
+      const radio = document.createElement("input");
+      const label = document.createElement("label");
 
-      newRadio.type = "radio";
-      newRadio.name = "answer";
-      newRadio.value = choise;
-      newRadio.id = `a${i + 1}`;
-      newLabel.innerText = choise;
-      newLabel.htmlFor = `a${i + 1}`;
+      radio.type = "radio";
+      radio.name = "answer";
+      radio.value = choice;
+      radio.id = `choice${i}`;
+      label.htmlFor = radio.id;
+      label.innerText = choice;
 
-      newLi.appendChild(newRadio);
-      newLi.appendChild(newLabel);
-      choiceContainer.appendChild(newLi);
+      li.appendChild(radio);
+      li.appendChild(label);
+      choiceContainer.appendChild(li);
     });
   }
 
-  function nextButtonHandler(question) {
-    let selectedAnswer;
-    currentChoices = document.querySelectorAll("#choices li input");
+  function nextButtonHandler() {
+    const selected = document.querySelector(
+      "#choices input[type='radio']:checked"
+    );
+    if (!selected) return;
 
-    currentChoices.forEach((e) => {
-      if (e.checked) {
-        if (quiz.checkAnswer(e.value)) {
-          quiz.moveToNextQuestion();
-          showQuestion();
-        }
-      }
-    });
+    quiz.checkAnswer(selected.value);
+    quiz.moveToNextQuestion();
+    showQuestion();
   }
 
   function showResults() {
-    // 1. Hide the quiz view (div#quizView)
+    clearInterval(timer);
     quizView.style.display = "none";
-
-    // 2. Show the end view (div#endView)
     endView.style.display = "flex";
-
-    // 3. Update the result container (div#result) inner text to show the number of correct answers out of total questions
-    resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`; // This value is hardcoded as a placeholder
+    resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`;
   }
 
   function startOver() {
@@ -213,7 +197,10 @@ document.addEventListener("DOMContentLoaded", () => {
     endView.style.display = "none";
     quiz.currentQuestionIndex = 0;
     quiz.correctAnswers = 0;
+    quiz.timeRemaining = quiz.timeLimit;
+    quiz.shuffleQuestions();
     showQuestion();
+    updateTimerDisplay();
+    startTimer();
   }
-  restartButton.addEventListener("click", startOver);
 });

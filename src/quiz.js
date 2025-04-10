@@ -1,3 +1,4 @@
+// @ts-nocheck
 class Quiz {
   constructor(questions, timeLimit, timeRemaining) {
     this.questions = questions;
@@ -12,7 +13,7 @@ class Quiz {
   }
 
   moveToNextQuestion() {
-    return this.currentQuestionIndex++;
+    this.currentQuestionIndex++;
   }
 
   shuffleQuestions() {
@@ -35,12 +36,7 @@ class Quiz {
   }
 
   hasEnded() {
-    if (this.currentQuestionIndex < this.questions.length) {
-      return false;
-    }
-    if (this.currentQuestionIndex == this.questions.length) {
-      return true;
-    }
+    return this.currentQuestionIndex >= this.questions.length;
   }
 
   filterQuestionsByDifficulty(difficulty) {
@@ -48,10 +44,13 @@ class Quiz {
       this.questions = this.questions.filter(
         (question) => question.difficulty === difficulty
       );
+      this.currentQuestionIndex = 0;
+      this.correctAnswers = 0;
     }
   }
 
   averageDifficulty() {
+    if (this.questions.length === 0) return 0;
     const totalDifficulty = this.questions.reduce(
       (total, question) => total + question.difficulty,
       0
