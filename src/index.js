@@ -110,7 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. Update the question count text 
     // Update the question count (div#questionCount) show the current question out of total questions
 
-    questionCount.innerText = `Question 1 of 10`; //  This value is hardcoded as a placeholder
+    questionCount.innerText = `Question ${quiz.currentQuestionIndex + 1} of ${
+      quiz.questions.length
+    }`;
+
 
 
 
@@ -132,13 +135,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-  function nextButtonHandler() {
-    let selectedAnswer; // A variable to store the selected answer value
+  currentQuestion.choices.forEach((choice, i) => {
+    const li = document.createElement("li");
+    const radio = document.createElement("input");
+    const label = document.createElement("label");
 
+    radio.type = "radio";
+    radio.name = "answer";
+    radio.value = choice;
+    radio.id = `choice${i}`;
+    label.htmlFor = radio.id;
+    label.innerText = choice;
 
+    li.appendChild(radio);
+    li.appendChild(label);
+    choiceContainer.appendChild(li);
+  });
+}
 
-    // YOUR CODE HERE:
-    //
+function nextButtonHandler() {
+  const selected = document.querySelector(
+    "#choices input[type='radio']:checked"
+  );
+
+  if (!selected) {
+    console.log("No radio button selected.");
+    return;
+  }
+
+  if (typeof quiz === 'undefined' || typeof quiz.checkAnswer !== 'function' || typeof quiz.moveToNextQuestion !== 'function' || typeof quiz.showQuestion !== 'function') {
+    console.error("Quiz object or its methods are not correctly defined.");
+    return;
+  }
+
+  quiz.checkAnswer(selected.value);
+  quiz.moveToNextQuestion();
+  quiz.showQuestion(); 
+}
+
     // 1. Get all the choice elements. You can use the `document.querySelectorAll()` method.
 
 
