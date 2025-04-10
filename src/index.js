@@ -1,208 +1,206 @@
+// @ts-nocheck
 document.addEventListener("DOMContentLoaded", () => {
-  /************  HTML ELEMENTS  ************/
-  // View divs
+  /************ HTML ELEMENTS ************/
   const quizView = document.querySelector("#quizView");
   const endView = document.querySelector("#endView");
 
-  // Quiz view elements
   const progressBar = document.querySelector("#progressBar");
   const questionCount = document.querySelector("#questionCount");
   const questionContainer = document.querySelector("#question");
   const choiceContainer = document.querySelector("#choices");
   const nextButton = document.querySelector("#nextButton");
+  const restartButton = document.querySelector("#restartButton");
 
-  // End view elements
   const resultContainer = document.querySelector("#result");
+  const timeRemainingContainer = document.getElementById("timeRemaining");
 
-
-  /************  SET VISIBILITY OF VIEWS  ************/
-
-  // Show the quiz view (div#quizView) and hide the end view (div#endView)
-  quizView.style.display = "block";
-  endView.style.display = "none";
-
-
-  /************  QUIZ DATA  ************/
-
-  // Array with the quiz questions
+  /************ QUIZ DATA ************/
   const questions = [
     new Question("What is 2 + 2?", ["3", "4", "5", "6"], "4", 1),
-    new Question("What is the capital of France?", ["Miami", "Paris", "Oslo", "Rome"], "Paris", 1),
-    new Question("Who created JavaScript?", ["Plato", "Brendan Eich", "Lea Verou", "Bill Gates"], "Brendan Eich", 2),
-    new Question("What is the mass–energy equivalence equation?", ["E = mc^2", "E = m*c^2", "E = m*c^3", "E = m*c"], "E = mc^2", 3),
-    // Add more questions here
+    new Question(
+      "What is the capital of France?",
+      ["Miami", "Paris", "Oslo", "Rome"],
+      "Paris",
+      1
+    ),
+    new Question(
+      "Who created JavaScript?",
+      ["Plato", "Brendan Eich", "Lea Verou", "Bill Gates"],
+      "Brendan Eich",
+      2
+    ),
+    new Question(
+      "What is the mass–energy equivalence equation?",
+      ["E = mc^2", "E = m*c^2", "E = m*c^3", "E = m*c"],
+      "E = mc^2",
+      3
+    ),
+    new Question(
+      "Which planet is known as the Red Planet?",
+      ["Venus", "Saturn", "Mars", "Jupiter"],
+      "Mars",
+      1
+    ),
+
+    new Question(
+      "What does HTML stand for?",
+      [
+        "Hyper Text Markup Language",
+        "Home Tool Markup Language",
+        "Hyperlinks and Text Markup Language",
+        "Hyper Technical Modern Language",
+      ],
+      "Hyper Text Markup Language",
+      1
+    ),
+
+    new Question(
+      "Which data structure uses FIFO (First In First Out)?",
+      ["Stack", "Queue", "Tree", "Graph"],
+      "Queue",
+      2
+    ),
+
+    new Question(
+      "Which country hosted the 2020 Summer Olympics?",
+      ["Brazil", "Japan", "China", "UK"],
+      "Japan",
+      2
+    ),
+
+    new Question(
+      "What is the value of π (pi) approximately?",
+      ["2.14", "3.14", "4.14", "5.14"],
+      "3.14",
+      1
+    ),
+
+    new Question(
+      "Who painted the Mona Lisa?",
+      [
+        "Vincent van Gogh",
+        "Leonardo da Vinci",
+        "Pablo Picasso",
+        "Claude Monet",
+      ],
+      "Leonardo da Vinci",
+      2
+    ),
   ];
-  const quizDuration = 120; // 120 seconds (2 minutes)
 
+  const quizDuration = 120; // seconds
+  let timer = null;
 
-  /************  QUIZ INSTANCE  ************/
-
-  // Create a new Quiz instance object
   const quiz = new Quiz(questions, quizDuration, quizDuration);
-  // Shuffle the quiz questions
   quiz.shuffleQuestions();
 
-
-  /************  SHOW INITIAL CONTENT  ************/
-
-  // Convert the time remaining in seconds to minutes and seconds, and pad the numbers with zeros if needed
-  const minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
-  const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
-
-  // Display the time remaining in the time remaining container
-  const timeRemainingContainer = document.getElementById("timeRemaining");
-  timeRemainingContainer.innerText = `${minutes}:${seconds}`;
-
-  // Show first question
+  /************ INITIAL VIEW ************/
+  quizView.style.display = "block";
+  endView.style.display = "none";
+  updateTimerDisplay();
   showQuestion();
+  startTimer();
 
+  /************ TIMER FUNCTION ************/
+  function startTimer() {
+    clearInterval(timer); // just in case
+    timer = setInterval(() => {
+      if (quiz.timeRemaining <= 0) {
+        clearInterval(timer);
+        showResults();
+        return;
+      }
+      quiz.timeRemaining--;
+      updateTimerDisplay();
+    }, 1000);
+  }
 
-  /************  TIMER  ************/
+  function updateTimerDisplay() {
+    const minutes = String(Math.floor(quiz.timeRemaining / 60)).padStart(
+      2,
+      "0"
+    );
+    const seconds = String(quiz.timeRemaining % 60).padStart(2, "0");
+    timeRemainingContainer.innerText = `${minutes}:${seconds}`;
+  }
 
-  let timer;
-
-
-  /************  EVENT LISTENERS  ************/
-
+  /************ EVENT LISTENERS ************/
   nextButton.addEventListener("click", nextButtonHandler);
+  restartButton.addEventListener("click", startOver);
 
-
-
-  /************  FUNCTIONS  ************/
-
-  // showQuestion() - Displays the current question and its choices
-  // nextButtonHandler() - Handles the click on the next button
-  // showResults() - Displays the end view and the quiz results
-
-
-
+  /************ DISPLAY FUNCTIONS ************/
   function showQuestion() {
-    // If the quiz has ended, show the results
     if (quiz.hasEnded()) {
       showResults();
       return;
     }
 
-    // Clear the previous question text and question choices
+    // Clear previous content
     questionContainer.innerText = "";
     choiceContainer.innerHTML = "";
 
-    // Get the current question from the quiz by calling the Quiz class method `getQuestion()`
-    const question = quiz.getQuestion();
-    // Shuffle the choices of the current question by calling the method 'shuffleChoices()' on the question object
-    question.shuffleChoices();
+    // Get current question and shuffle choices
+    const currentQuestion = quiz.getQuestion();
+    currentQuestion.shuffleChoices();
 
+    // Display question
+    questionContainer.innerText = currentQuestion.text;
 
+    // Update progress bar
+    const progress = (quiz.currentQuestionIndex / quiz.questions.length) * 100;
+    progressBar.style.width = `${progress}%`;
 
-    // YOUR CODE HERE:
-    //
-    // 1. Show the question
-    // Update the inner text of the question container element and show the question text
-    questionContainer.innerText = question.text
-
-    // 2. Update the green progress bar
-    // Update the green progress bar (div#progressBar) width so that it shows the percentage of questions answered
-    const progress = (quiz.currentQuestionIndex / quiz.questions.length) * 100
-    progressBar.style.width = `${progress}%`; // This value is hardcoded as a placeholder
-
-
-
-    // 3. Update the question count text 
-    // Update the question count (div#questionCount) show the current question out of total questions
-
+    // Show question count
     questionCount.innerText = `Question ${quiz.currentQuestionIndex + 1} of ${
       quiz.questions.length
     }`;
 
+    // Render choices
+    currentQuestion.choices.forEach((choice, i) => {
+      const li = document.createElement("li");
+      const radio = document.createElement("input");
+      const label = document.createElement("label");
 
+      radio.type = "radio";
+      radio.name = "answer";
+      radio.value = choice;
+      radio.id = `choice${i}`;
+      label.htmlFor = radio.id;
+      label.innerText = choice;
 
-
-    // 4. Create and display new radio input element with a label for each choice.
-    // Loop through the current question `choices`.
-    // For each choice create a new radio input with a label, and append it to the choice container.
-    // Each choice should be displayed as a radio input element with a label:
-    /* 
-        <input type="radio" name="choice" value="CHOICE TEXT HERE">
-        <label>CHOICE TEXT HERE</label>
-      <br>
-    */
-    // Hint 1: You can use the `document.createElement()` method to create a new element.
-    // Hint 2: You can use the `element.type`, `element.name`, and `element.value` properties to set the type, name, and value of an element.
-    // Hint 3: You can use the `element.appendChild()` method to append an element to the choices container.
-    // Hint 4: You can use the `element.innerText` property to set the inner text of an element.
-
+      li.appendChild(radio);
+      li.appendChild(label);
+      choiceContainer.appendChild(li);
+    });
   }
 
+  function nextButtonHandler() {
+    const selected = document.querySelector(
+      "#choices input[type='radio']:checked"
+    );
+    if (!selected) return;
 
-
-  currentQuestion.choices.forEach((choice, i) => {
-    const li = document.createElement("li");
-    const radio = document.createElement("input");
-    const label = document.createElement("label");
-
-    radio.type = "radio";
-    radio.name = "answer";
-    radio.value = choice;
-    radio.id = `choice${i}`;
-    label.htmlFor = radio.id;
-    label.innerText = choice;
-
-    li.appendChild(radio);
-    li.appendChild(label);
-    choiceContainer.appendChild(li);
-  });
-}
-
-function nextButtonHandler() {
-  const selected = document.querySelector(
-    "#choices input[type='radio']:checked"
-  );
-
-  if (!selected) {
-    console.log("No radio button selected.");
-    return;
+    quiz.checkAnswer(selected.value);
+    quiz.moveToNextQuestion();
+    showQuestion();
   }
-
-  if (typeof quiz === 'undefined' || typeof quiz.checkAnswer !== 'function' || typeof quiz.moveToNextQuestion !== 'function' || typeof quiz.showQuestion !== 'function') {
-    console.error("Quiz object or its methods are not correctly defined.");
-    return;
-  }
-
-  quiz.checkAnswer(selected.value);
-  quiz.moveToNextQuestion();
-  quiz.showQuestion(); 
-}
-
-    // 1. Get all the choice elements. You can use the `document.querySelectorAll()` method.
-
-
-    // 2. Loop through all the choice elements and check which one is selected
-    // Hint: Radio input elements have a property `.checked` (e.g., `element.checked`).
-    //  When a radio input gets selected the `.checked` property will be set to true.
-    //  You can use check which choice was selected by checking if the `.checked` property is true.
-
-
-    // 3. If an answer is selected (`selectedAnswer`), check if it is correct and move to the next question
-    // Check if selected answer is correct by calling the quiz method `checkAnswer()` with the selected answer.
-    // Move to the next question by calling the quiz method `moveToNextQuestion()`.
-    // Show the next question by calling the function `showQuestion()`.
-  }
-
-
-
 
   function showResults() {
-
-    // YOUR CODE HERE:
-    //
-    // 1. Hide the quiz view (div#quizView)
+    clearInterval(timer);
     quizView.style.display = "none";
-
-    // 2. Show the end view (div#endView)
     endView.style.display = "flex";
-
-    // 3. Update the result container (div#result) inner text to show the number of correct answers out of total questions
-    resultContainer.innerText = `You scored 1 out of 1 correct answers!`; // This value is hardcoded as a placeholder
+    resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`;
   }
 
+  function startOver() {
+    quizView.style.display = "flex";
+    endView.style.display = "none";
+    quiz.currentQuestionIndex = 0;
+    quiz.correctAnswers = 0;
+    quiz.timeRemaining = quiz.timeLimit;
+    quiz.shuffleQuestions();
+    showQuestion();
+    updateTimerDisplay();
+    startTimer();
+  }
 });
